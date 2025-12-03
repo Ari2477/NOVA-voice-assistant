@@ -1,12 +1,10 @@
 import os
 import re
-import time
 import webbrowser
 from datetime import datetime
 from pathlib import Path
 
 import speech_recognition as sr
-import requests
 from googletrans import Translator
 
 # --------------------- SETTINGS ---------------------
@@ -143,20 +141,22 @@ def handle_command(cmd: str):
 
 # --------------------- SPEECH RECOGNITION (Termux API) ---------------------
 
-def listen_and_transcribe(recognizer=None, mic=None):
+def listen_and_transcribe():
     """
-    Record audio using Termux API and transcribe it with speech_recognition.
+    Record audio using Termux API and transcribe it.
     """
     audio_file = Path.home() / "nova_record.wav"
 
-    # Record 5 seconds of audio using Termux API
     print("Listening... Speak now!")
     os.system(f"termux-microphone-record -r {audio_file} -l 5")
 
-    # Use speech_recognition to process the audio
     r = sr.Recognizer()
     with sr.AudioFile(str(audio_file)) as source:
         audio = r.record(source)
+
+    # Delete file after reading
+    if audio_file.exists():
+        os.remove(audio_file)
 
     try:
         text = r.recognize_google(audio)
@@ -187,7 +187,6 @@ def main():
 
         print("Command:", cmd)
         handle_command(cmd)
-
 
 if __name__ == "__main__":
     try:
