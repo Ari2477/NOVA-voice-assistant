@@ -145,10 +145,8 @@ def listen_and_transcribe():
     """
     Record audio using Termux API and transcribe it.
     """
-    audio_file = Path.home() / "nova_record.wav"
-
-    print("Listening... Speak now!")
-    os.system(f"termux-microphone-record -r {audio_file} -l 5")
+    audio_file = "nova_record.wav"
+os.system(f"termux-microphone-record -r {audio_file} -l 5")
 
     r = sr.Recognizer()
     with sr.AudioFile(str(audio_file)) as source:
