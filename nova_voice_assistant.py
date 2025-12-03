@@ -3,6 +3,7 @@ import re
 import time
 import webbrowser
 from datetime import datetime
+from pathlib import Path
 
 import speech_recognition as sr
 import requests
@@ -140,19 +141,25 @@ def handle_command(cmd: str):
     do_web_search(cmd)
     return True
 
-# --------------------- SPEECH RECOGNITION ---------------------
+# --------------------- SPEECH RECOGNITION (Termux API) ---------------------
 
-def listen_and_transcribe(recognizer, mic):
-    with mic as source:
-        recognizer.adjust_for_ambient_noise(source, duration=0.3)
-        print("Listening...")
-        try:
-            audio = recognizer.listen(source, timeout=5, phrase_time_limit=6)
-        except:
-            return ""
+def listen_and_transcribe(recognizer=None, mic=None):
+    """
+    Record audio using Termux API and transcribe it with speech_recognition.
+    """
+    audio_file = Path.home() / "nova_record.wav"
+
+    # Record 5 seconds of audio using Termux API
+    print("Listening... Speak now!")
+    os.system(f"termux-microphone-record -r {audio_file} -l 5")
+
+    # Use speech_recognition to process the audio
+    r = sr.Recognizer()
+    with sr.AudioFile(str(audio_file)) as source:
+        audio = r.record(source)
 
     try:
-        text = recognizer.recognize_google(audio)
+        text = r.recognize_google(audio)
         return clean_text(text)
     except:
         return ""
@@ -161,12 +168,9 @@ def listen_and_transcribe(recognizer, mic):
 
 def main():
     say(f"Hello! I'm {NAME}. Say 'Hey Nova' to talk to me.")
-    recognizer = sr.Recognizer()
-
-    mic = sr.Microphone()
 
     while True:
-        utterance = listen_and_transcribe(recognizer, mic)
+        utterance = listen_and_transcribe()
         if not utterance:
             continue
 
@@ -179,7 +183,7 @@ def main():
 
         if not cmd:
             say("Yes?")
-            cmd = listen_and_transcribe(recognizer, mic)
+            cmd = listen_and_transcribe()
 
         print("Command:", cmd)
         handle_command(cmd)
